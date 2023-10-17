@@ -20,9 +20,12 @@ app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
 });
 
-app.use(
-  cors()
-);
+const corsOptions = {
+  origin: 'https://loginhomeoverrule.netlify.app',
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 
 app.use(cookieParser());
 
