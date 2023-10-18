@@ -89,16 +89,7 @@ module.exports.Login = async (req, res, next) => {
         .json({ message: "An Email sent to your account please verify" });
     }
     const token = createSecretToken(user._id);
-    res.cookie("token", token, {
-      withCredentials: true,
-      httpOnly: true,
-  path: '/',
-  domain: 'onrender.com',
-  secure: true,
-  sameSite: 'None'
-    });
-    console.log("cookie token",token)
-    res.status(201).json({ message: "User logged in successfully", success: true });
+    res.status(201).json({ message: "User logged in successfully", success: true,token });
     next()
   } catch (error) {
     console.error(error);
@@ -125,13 +116,9 @@ module.exports.GoogleSignin = async (req, res, next) => {
         username: given_name + " " + family_name,
       });
       const token = createSecretToken(user._id);
-      res.cookie("token", token, {
-        withCredentials: true,
-        httpOnly: false,
-      });
       res
         .status(201)
-        .json({ message: "User registered successfully", success: true, user });
+        .json({ message: "User registered successfully", success: true, user ,token });
       next();
     }
 
