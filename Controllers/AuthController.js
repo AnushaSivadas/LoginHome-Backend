@@ -9,7 +9,7 @@ const crypto = require('crypto')
 module.exports.Signup = async (req, res, next) => {
   try {
     const { email, username, confirmpassword, createdAt } = req.body;
-    let {password}=req.body
+    let { password } = req.body
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.json({ message: "User already exists" });
@@ -18,17 +18,17 @@ module.exports.Signup = async (req, res, next) => {
     if (password != confirmpassword) {
       return res.json({ message: "Passwords doesn't match" })
     }
- 
+
     password = await bcrypt.hash(password, 12);
-   
+
     const user = await User.create({ email, password, username, createdAt });
     const token = await new Token({
-      userId:user._id,
-      token:crypto.randomBytes(32).toString("hex")
+      userId: user._id,
+      token: crypto.randomBytes(32).toString("hex")
     }).save()
 
     const url = `${process.env.BASE_URL}/${user._id}/verify/${token.token}`
-    await sendEmail(user.email,"Verify Email",url)
+    await sendEmail(user.email, "Verify Email", url)
     res.status(201)
       .json({ message: "An Email sent to your account please verify", success: true, user });
     next();
@@ -38,24 +38,24 @@ module.exports.Signup = async (req, res, next) => {
 };
 
 module.exports.verifyEmail = async (req, res) => {
-	try {
-		const user = await User.findOne({ _id: req.params.id });
-		if (!user) return res.status(400).send({ message: "Invalid link" });
+  try {
+    const user = await User.findOne({ _id: req.params.id });
+    if (!user) return res.status(400).send({ message: "Invalid link" });
 
-		const token = await Token.findOne({
-			userId: user._id,
-			token: req.params.token,
-		});
+    const token = await Token.findOne({
+      userId: user._id,
+      token: req.params.token,
+    });
 
-		if (!token) return res.status(400).send({ message: "Invalid link" });
+    if (!token) return res.status(400).send({ message: "Invalid link" });
 
-		await User.updateOne({ _id: user._id, verified: true });
-		// await token.remove();
+    await User.updateOne({ _id: user._id, verified: true });
+    // await token.remove();
 
-		res.status(200).send({ message: "Email verified successfully",success:true ,user});
-	} catch (error) {
-		res.status(500).send({ message: "Internal Server Error" });
-	}
+    res.status(200).send({ message: "Email verified successfully", success: true, user });
+  } catch (error) {
+    res.status(500).send({ message: "Internal Server Error" });
+  }
 };
 
 module.exports.Login = async (req, res, next) => {
@@ -73,27 +73,30 @@ module.exports.Login = async (req, res, next) => {
       return res.json({ message: 'Incorrect password or email' })
     }
     if (!user.verified) {
-			let token = await Token.findOne({ userId: user._id });
+      let token = await Token.findOne({ userId: user._id });
 
-			if (!token) {
+      if (!token) {
 
-				token = await new Token({
-					userId: user._id,
-					token: crypto.randomBytes(32).toString("hex"),
-				}).save();
-				const url = `${process.env.BASE_URL}/${user.id}/verify/${token.token}`;
-				await sendEmail(user.email, "Verify Email", url);
-			}      
-			return res
-				.status(201)
-				.json({ message: "An Email sent to your account please verify"});
-		}
+        token = await new Token({
+          userId: user._id,
+          token: crypto.randomBytes(32).toString("hex"),
+        }).save();
+        const url = `${process.env.BASE_URL}/${user.id}/verify/${token.token}`;
+        await sendEmail(user.email, "Verify Email", url);
+      }
+      return res
+        .status(201)
+        .json({ message: "An Email sent to your account please verify" });
+    }
     const token = createSecretToken(user._id);
     res.cookie("token", token, {
       withCredentials: true,
-      httpOnly: false,
+      httpOnly: true,
+      path: '/',
+      domain: '.netlify.app', 
+      secure: true, 
+      sameSite: 'None'
     });
-    console.log("user",user,token)
     res.status(201).json({ message: "User logged in successfully", success: true });
     next()
   } catch (error) {

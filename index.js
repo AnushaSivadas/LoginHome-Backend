@@ -22,7 +22,7 @@ app.listen(PORT, () => {
 
 const corsOptions = {
   origin: 'https://loginhomeoverrule.netlify.app',
-  credentials: true,
+  credentials: true, 
 };
 
 app.use(cors(corsOptions));
